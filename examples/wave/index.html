@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>trina example</title>
+        <meta charset="utf-8">
+        <style>
+            * {padding: 0; margin: 0; font-family: arial;}
+            html {width: 100%; height: 100%;}
+            body {width: 100%; height: 100%;}
+            p {font-family:arial; font-size:10pt;}
+            #hidden {display: none;}
+            .controls {float: right;}
+            label {display: inline-block; width: 40px;}
+            .value {display: inline-block; width: 100px;}
+            input[type="range"] {width: 300px;}
+        </style>
+    </head>
+    <body>
+        <canvas id="hidden" height="800" width="800"></canvas>
+        <canvas id="visible" height="800" width="800"></canvas>
+        <form id="controls" class="controls">
+            <div><label>phi</label><div class="value"></div><input type="range"   name="phi"          min="-3.14159265" max="3.14159265" step=".00314159265"></div>
+            <div><label>theta</label><div class="value"></div><input type="range" name="theta"        min="-3.14159265" max="3.14159265" step=".00314159265"></div>
+            <div><label>psi</label><div class="value"></div><input type="range"   name="psi"          min="-3.14159265" max="3.14159265" step=".00314159265"></div>
+
+            <div><label>x</label><div class="value"></div><input type="range"     name="position_x"   min="-500" max="500" step=".5"></div>
+            <div><label>y</label><div class="value"></div><input type="range"     name="position_y"   min="-500" max="500" step=".5"></div>
+            <div><label>z</label><div class="value"></div><input type="range"     name="position_z"   min="-500" max="500" step=".5"></div>
+            <div><label>track origin</label><div class="value"></div><input type="checkbox" name="track_origin" onchange="updateRangeValue(this)"></div>
+
+            <script>
+                var pi = Math.atan(1)* 4;
+                function updateRangeValue() {
+                    var frm = document.getElementById('controls')
+                    if (frm.track_origin.checked) {
+                        var angles = Tpot.Transform3d.caculateEulerAngles([frm.position_x.value, frm.position_y.value, frm.position_z.value], [0, 0, 0])
+                        frm.phi.value = angles[0];
+                        frm.theta.value = angles[1];
+                    }
+                    if (this.type === 'range') {
+                        this.parentNode.querySelector('.value').innerHTML = this.value;
+                    }
+                }
+                (function initialRangeValues() {
+                    [].forEach.call(
+                        document.querySelectorAll('#controls input[type="range"]'),
+                        function (el) {
+                            var on = updateRangeValue.bind(el)
+                            el.oninput = on;
+                            el.onchange = on;
+                            on();
+                        }
+                    );
+                }());
+            </script>
+            <style>
+                #debug * {padding: 0; margin: 0; font-family: arial;}
+                #debug span {display: inline-block; padding: 0 2px;}
+                #debug span.name { width: 100px;}
+                #debug span.value { width: 40px;}
+                #debug span.units { width: 30px;}
+                #debug span.percent { width: 50px;}
+            </style>
+            <div id="logx"></div>
+            <div id="debug"></div>
+        </form>
+
+        <script language='javascript1.2' src='../../matrix.js' type='text/javascript'></script>
+        <script language='javascript1.2' src='../../3d-transforms.js' type='text/javascript'></script>
+        <script language='javascript1.2' src='../../3d-viewer.js' type='text/javascript'></script>
+        <script language='javascript1.2' src='../../mesh.js' type='text/javascript'></script>
+        <script language='javascript1.2' src='../../stats.js' type='text/javascript'></script>
+        <script language='javascript1.2' src='../../trina.js' type='text/javascript'></script>
+        <script language='javascript1.2' src='../../point-cache.js' type='text/javascript'></script>
+        <script language='javascript1.2' src='../map-pulsing-wave.js' type='text/javascript'></script>
+        <script language='javascript1.2' src='../map-axis.js' type='text/javascript'></script>
+        <script>
+            var trina = new Tpot.Trina(document.querySelector('#visible'), document.querySelector('#hidden'));
+            trina.setMap({
+                things: {
+//                    'axes': {map: new Tpot.Map.Axes(7), placement: {scale: [1, 1, 1], orientation: [0, 0, 0], position: [0, 0, 0]}},
+                    'wave': {surface: new Tpot.Map.PulsingWave(50, 0.5), color: [200,200,200]}
+                }
+            });
+
+            var frm = document.getElementById('controls');
+            var camera =
+                {
+                    position: function () {
+                        return [
+                            frm.position_x.value,
+                            frm.position_y.value,
+                            frm.position_z.value
+                        ];
+                    },
+                    orientation: function () {
+                        return [
+                            frm.phi.value,
+                            frm.theta.value,
+                            frm.psi.value
+                        ];
+                    },
+                    aperture: function () {
+                        return {
+                            x: 200,
+                            y: 200,
+                            z: 400
+                        };
+                    }
+                 }
+
+            trina.setCamera(camera);
+            trina.draw();
+        </script>
+    </body>
+</html>
